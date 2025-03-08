@@ -2,8 +2,7 @@ import streamlit as st
 from huggingface_hub import InferenceClient
 
 # Load API Key from Streamlit Secrets
-HF_API_KEY = st.secrets["HF_API_KEY"]
-
+HF_API_KEY = "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"
 # Initialize Hugging Face API client
 client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta", token=HF_API_KEY)
 
