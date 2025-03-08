@@ -5,19 +5,24 @@ import base64
 from gradio_client import Client
 @st.cache_resource
 def getClient():
-    return Client("yuva2110/vanilla-charbot")
-client=getClient()
-def getChat(question):
-    result = client.predict(
-            message=question,
-            system_message="You are a friendly Chatbot.",
-            max_tokens=512,
-            temperature=0.7,
-            top_p=0.95,
-            api_name="/chat"
-    )
-    return result
+    return InferenceClient(api_key="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")
+client = getClient()
+def getChat(s):
+    result = ""
+    messages = [ { "role": "user", "content": s }]
 
+    stream = client.chat.completions.create(
+        model="HuggingFaceH4/zephyr-7b-beta", 
+        messages=messages, 
+        temperature=0.7,
+        max_tokens=1024,
+        top_p=0.7,
+        stream=True
+    )
+    
+    for chunk in stream:
+        result += chunk.choices[0].delta.content
+    return result
 
 # Streamed response emulator
 def response_generator():
