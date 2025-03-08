@@ -2,27 +2,16 @@ import streamlit as st
 from huggingface_hub import InferenceClient
 
 # Initialize Hugging Face API client
-client = InferenceClient(api_key="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")
+client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta")  # Model specified here
 
 # Function to get chat response
 def get_chat_response(user_input):
     messages = [{"role": "user", "content": user_input}]
-    result = ""
-
-    # Streaming response
-    stream = client.chat_completions.create(
-        model="HuggingFaceH4/zephyr-7b-beta",
-        messages=messages,
-        temperature=0.7,
-        max_tokens=1024,
-        top_p=0.7,
-        stream=True
-    )
-
-    for chunk in stream:
-        result += chunk.choices[0].delta.content
-
-    return result
+    
+    # Make a request to Hugging Face model
+    response = client.post(json={"inputs": messages, "parameters": {"temperature": 0.7, "max_new_tokens": 1024, "top_p": 0.7}})
+    
+    return response  # Directly returning text response
 
 # Streamlit UI
 st.title("🤖 AI Chatbot")
