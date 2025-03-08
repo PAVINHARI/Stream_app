@@ -1,17 +1,19 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 
+# Load API Key from Streamlit Secrets
+HF_API_KEY = st.secrets["HF_API_KEY"]
+
 # Initialize Hugging Face API client
-client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta")  # Model specified here
+client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta", token=HF_API_KEY)
 
 # Function to get chat response
 def get_chat_response(user_input):
-    messages = [{"role": "user", "content": user_input}]
-    
-    # Make a request to Hugging Face model
-    response = client.post(json={"inputs": messages, "parameters": {"temperature": 0.7, "max_new_tokens": 1024, "top_p": 0.7}})
-    
-    return response  # Directly returning text response
+    try:
+        response = client.text_generation(user_input, max_new_tokens=1024, temperature=0.7, top_p=0.7)
+        return response
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 # Streamlit UI
 st.title("🤖 AI Chatbot")
