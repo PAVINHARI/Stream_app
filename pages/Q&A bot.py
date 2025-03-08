@@ -1,20 +1,15 @@
 import streamlit as st
-import random
-import time
-from huggingface_hub import InferenceClient  # Correct client import
+from huggingface_hub import InferenceClient
 
-# Cache the Hugging Face API client
-@st.cache_resource
-def get_client():
-    return InferenceClient(api_key="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")
+# Initialize Hugging Face API client
+client = InferenceClient(api_key="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")
 
 # Function to get chat response
-def get_chat_response(prompt):
-    client = get_client()  # Get cached client
+def get_chat_response(user_input):
+    messages = [{"role": "user", "content": user_input}]
     result = ""
 
-    messages = [{"role": "user", "content": prompt}]
-    
+    # Streaming response
     stream = client.chat_completions.create(
         model="HuggingFaceH4/zephyr-7b-beta",
         messages=messages,
@@ -29,28 +24,32 @@ def get_chat_response(prompt):
 
     return result
 
+# Streamlit UI
+st.title("🤖 AI Chatbot")
+st.write("Chat with an AI-powered assistant!")
+
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous messages
+# Display previous chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# User input
-if prompt := st.chat_input("Enter your query"):
-    # Add user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # Get assistant response
-    response = get_chat_response(prompt)
+# Accept user input
+if user_input := st.chat_input("Enter your message..."):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": user_input})
     
-    # Display assistant response
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    # Get and display AI response
     with st.chat_message("assistant"):
+        response = get_chat_response(user_input)
         st.markdown(response)
 
-    # Add assistant response to history
+    # Add AI response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
