@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 import time
-import base64
 from huggingface_hub import InferenceClient  # Correct client import
 
 # Cache the Hugging Face API client
@@ -29,44 +28,6 @@ def get_chat_response(prompt):
         result += chunk.choices[0].delta.content
 
     return result
-
-# Function to add background image to main chat
-def add_bg_from_local(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        .ScrollToBottomContainer {{
-            background-image: url("data:image/png;base64,{encoded_string}");
-            background-size: cover;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# Function to add background image to sidebar
-def add_bg_to_sidebar(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        [data-testid="stSidebar"] > div:first-child {{
-            background-image: url("data:image/png;base64,{encoded_string}");
-            background-size: cover;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# Set background images
-main_bg_path = 'imagefiles/pexels-padrinan-255379.jpg'
-sidebar_bg_path = 'imagefiles/pill-tablet-pharmacy-medicine.jpg'
-add_bg_from_local(main_bg_path)
-add_bg_to_sidebar(sidebar_bg_path)
 
 # Initialize chat history
 if "messages" not in st.session_state:
