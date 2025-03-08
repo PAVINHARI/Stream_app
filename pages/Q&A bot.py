@@ -4,10 +4,8 @@ import time
 import base64
 from gradio_client import Client
 @st.cache_resource
-def getClient():
-    return InferenceClient(api_key="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")
-client = getClient()
 def getChat(s):
+    InferenceClient(api_key="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")
     result = ""
     messages = [ { "role": "user", "content": s }]
 
