@@ -2,59 +2,42 @@ import streamlit as st
 import random
 import time
 import base64
-from gradio_client import Client
-@st.cache_resource
-def getChat(s):
-    InferenceClient(api_key="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")
-    result = ""
-    messages = [ { "role": "user", "content": s }]
+from huggingface_hub import InferenceClient  # Correct client import
 
-    stream = client.chat.completions.create(
-        model="HuggingFaceH4/zephyr-7b-beta", 
-        messages=messages, 
+# Cache the Hugging Face API client
+@st.cache_resource
+def get_client():
+    return InferenceClient(api_key="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")
+
+# Function to get chat response
+def get_chat_response(prompt):
+    client = get_client()  # Get cached client
+    result = ""
+
+    messages = [{"role": "user", "content": prompt}]
+    
+    stream = client.chat_completions.create(
+        model="HuggingFaceH4/zephyr-7b-beta",
+        messages=messages,
         temperature=0.7,
         max_tokens=1024,
         top_p=0.7,
         stream=True
     )
-    
+
     for chunk in stream:
         result += chunk.choices[0].delta.content
+
     return result
 
-# Streamed response emulator
-def response_generator():
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
-
-# Streamed response emulator
-def response_generator():
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
-
-def add_bg_from_localchat(image_path):
+# Function to add background image to main chat
+def add_bg_from_local(image_path):
     with open(image_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
     st.markdown(
         f"""
         <style>
-        .ScrollToBottomContainer{{
+        .ScrollToBottomContainer {{
             background-image: url("data:image/png;base64,{encoded_string}");
             background-size: cover;
         }}
@@ -63,48 +46,50 @@ def add_bg_from_localchat(image_path):
         unsafe_allow_html=True
     )
 
-    # Function to add background image to the sidebar
-    def add_bg_to_sidebarchat(image_path):
-        with open(image_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        st.markdown(
-            f"""
-            <style>
-            [data-testid="stSidebar"] > div:first-child {{
-                background-image: url("data:image/png;base64,{encoded_string}");
-                background-size: cover;
-            }}
+# Function to add background image to sidebar
+def add_bg_to_sidebar(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stSidebar"] > div:first-child {{
+            background-image: url("data:image/png;base64,{encoded_string}");
+            background-size: cover;
+        }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # Paths to your local images
-        main_bg_pathchat = 'imagefiles\pexels-padrinan-255379.jpg'
-        sidebar_bg_pathchat = 'imagefiles\pill-tablet-pharmacy-medicine.jpg'
-    # Add background images
-        add_bg_from_localchat(main_bg_pathchat)
-        add_bg_to_sidebarchat(sidebar_bg_pathchat)
+# Set background images
+main_bg_path = 'imagefiles/pexels-padrinan-255379.jpg'
+sidebar_bg_path = 'imagefiles/pill-tablet-pharmacy-medicine.jpg'
+add_bg_from_local(main_bg_path)
+add_bg_to_sidebar(sidebar_bg_path)
 
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages from history on app rerun
+# Display previous messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Accept user input
+# User input
 if prompt := st.chat_input("Enter your query"):
-    # Add user message to chat history
+    # Add user message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Display assistant response in chat message container
+    # Get assistant response
+    response = get_chat_response(prompt)
+    
+    # Display assistant response
     with st.chat_message("assistant"):
-        response = st.write(getChat(prompt))
-    # Add assistant response to chat history
+        st.markdown(response)
+
+    # Add assistant response to history
     st.session_state.messages.append({"role": "assistant", "content": response})
